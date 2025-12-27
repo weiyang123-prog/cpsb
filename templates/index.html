@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>停车场系统 - 主页</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 添加CSRF令牌元标签 -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        .video-container {
+            background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+        }
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .car-item {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .car-item:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateX(5px);
+        }
+        .upload-label {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+        .upload-label:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div class="main-container mx-auto max-w-7xl p-6">
+        <!-- 顶部导航栏 -->
+        <nav class="nav-glass rounded-2xl p-6 mb-8 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                    <i class="fa fa-car text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        停车场智能识别系统
+                    </h1>
+                    <p class="text-gray-600 text-sm">智能车牌识别 • 自动计费管理</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-6 mt-4 sm:mt-0">
+                <div class="flex items-center space-x-2 text-gray-700 bg-white/50 rounded-lg px-4 py-2">
+                    <i class="fa fa-clock-o text-blue-500"></i>
+                    <span id="current-time" class="font-medium">{{ current_time }}</span>
+                </div>
+
+                <!-- 管理员入口 -->
+                {% if current_user.role == 1 %}
+                <a href="{{ url_for('admin_dashboard') }}" class="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg transition-all hover:scale-105 hover:shadow-lg">
+                    <i class="fa fa-cogs"></i>
+                    <span>管理后台</span>
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('logout') }}" class="flex items-center space-x-2 text-red-500 hover:text-red-600 transition-colors bg-white/50 rounded-lg px-4 py-2">
+                    <i class="fa fa-sign-out"></i>
+                    <span>退出登录</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            <!-- 左侧主要内容区 -->
+            <div class="xl:col-span-3 space-y-8">
+                <!-- 视频监控卡片 -->
+                <div class="card p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fa fa-video-camera text-blue-600 text-lg"></i>
+                            </div>
+                            实时监控画面
+                        </h2>
+                        <div class="flex space-x-3">
+                            <button id="capture-btn" class="btn-success text-white px-6 py-3 rounded-xl flex items-center space-x-2 font-medium">
+                                <i class="fa fa-camera"></i>
+                                <span>抓拍图像</span>
+                            </button>
+                            <button id="refresh-video" class="btn-secondary text-white px-6 py-3 rounded-xl flex items-center space-x-2 font-medium">
+                                <i class="fa fa-refresh"></i>
+                                <span>刷新画面</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 视频容器 -->
+                    <div class="video-container rounded-2xl h-80 flex items-center justify-center mb-6 relative">
+                        <video id="video-preview" autoplay playsinline class="w-full h-full object-cover hidden rounded-2xl"></video>
+                        <img id="video-placeholder" src="https://images.unsplash.com/photo-1485291571150-772bcfc10da5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="视频占位图" class="w-full h-full object-cover rounded-2xl">
+                        <div id="video-loading" class="absolute text-white text-center">
+                            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-3"></div>
+                            <p class="text-lg">正在连接摄像头...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 抓拍与识别结果卡片 -->
+                <div class="card p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fa fa-image text-green-600 text-lg"></i>
+                        </div>
+                        图像识别处理
+                    </h2>
+
+                    <!-- 上传识别区域 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">上传识别</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <input type="file" id="image-upload" accept="image/*" class="hidden">
+                                <label for="image-upload" class="upload-label block w-full px-6 py-8 rounded-2xl text-center cursor-pointer transition-all">
+                                    <i class="fa fa-image text-3xl text-blue-500 mb-3"></i>
+                                    <p class="font-medium text-gray-700">上传图片文件</p>
+                                    <p class="text-sm text-gray-500 mt-1">支持 JPG, PNG 格式</p>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="file" id="video-upload" accept="video/*" class="hidden">
+                                <label for="video-upload" class="upload-label block w-full px-6 py-8 rounded-2xl text-center cursor-pointer transition-all">
+                                    <i class="fa fa-video-camera text-3xl text-purple-500 mb-3"></i>
+                                    <p class="font-medium text-gray-700">上传视频文件</p>
+                                    <p class="text-sm text-gray-500 mt-1">支持 MP4, AVI 格式</p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <!-- 抓拍预览区 -->
+                    <div id="capture-preview-container" class="mb-8 hidden">
+                        <div class="bg-gray-50 rounded-2xl p-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">抓拍预览</h4>
+                            <!-- 修改这里：添加预览图片包装器 -->
+                            <div class="preview-image-wrapper mb-4">
+                                <img id="capture-preview" src="" alt="抓拍预览" class="capture-preview-img">
+                            </div>
+                            <button id="recognize-btn" class="btn-primary text-white px-8 py-3 rounded-xl flex items-center space-x-2 font-medium mx-auto">
+                                <i class="fa fa-search"></i>
+                                <span>开始车牌识别</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 未抓拍提示 -->
+                    <div id="no-capture-tip" class="text-center py-12 text-gray-500 bg-gray-50 rounded-2xl">
+                        <i class="fa fa-camera text-5xl mb-4 opacity-50"></i>
+                        <p class="text-xl">点击「抓拍图像」按钮获取车辆图片</p>
+                        <p class="text-sm mt-2">或上传图片/视频文件进行识别</p>
+                    </div>
+
+                    <!-- 识别结果区 -->
+                    <div id="recognition-result" class="mt-8 hidden">
+                        <div class="border-t border-gray-200 pt-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                                <i class="fa fa-check-circle text-green-500 mr-3"></i>
+                                识别结果
+                            </h3>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- 带标注的图片 -->
+                                <div class="bg-white rounded-2xl p-6 border border-gray-200">
+                                    <p class="text-sm font-medium text-gray-500 mb-3">车牌标注图像</p>
+                                    <img id="marked-image" src="" alt="带车牌标注的图片" class="w-full rounded-xl border border-gray-200">
+                                </div>
+
+                                <!-- 识别信息 -->
+                                <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6">
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-500 mb-2">车牌号码</p>
+                                            <p id="car-number" class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"></p>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-500 mb-2">出入场类型</p>
+                                                <p id="access-type" class="text-lg font-semibold text-gray-800"></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-500 mb-2">识别时间</p>
+                                                <p id="access-time" class="text-lg font-semibold text-gray-800"></p>
+                                            </div>
+                                        </div>
+
+                                        <div id="fee-container" style="display: none;">
+                                            <p class="text-sm font-medium text-gray-500 mb-2">停车费用</p>
+                                            <p id="parking-fee" class="text-2xl font-bold text-green-600"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧信息栏 -->
+            <div class="space-y-8">
+                <!-- 停车场状态卡片 -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fa fa-parking text-blue-600"></i>
+                        </div>
+                        停车场状态
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="stat-card rounded-2xl p-6 text-center">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa fa-car text-white"></i>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">剩余车位数</p>
+                            <p id="remaining-lot" class="text-4xl font-bold text-blue-600">{{ remaining_lot }}</p>
+                        </div>
+
+                        <div class="stat-card rounded-2xl p-6 text-center">
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fa fa-money text-white"></i>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">停车单价（元/小时）</p>
+                            <p id="unit-price" class="text-3xl font-bold text-green-600">{{ unit_price }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 当前在场车辆卡片 -->
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fa fa-list text-green-600"></i>
+                            </div>
+                            在场车辆
+                        </h2>
+                        <button id="refresh-cars" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-gray-200 transition-colors">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                    </div>
+
+                    <div id="current-cars" class="max-h-96 overflow-y-auto space-y-3 pr-2">
+                        {% if current_cars %}
+                            {% for car in current_cars %}
+                            <div class="car-item rounded-xl p-4 flex justify-between items-center">
+                                <div>
+                                    <p class="font-bold text-gray-800 text-lg">{{ car.license_plate }}</p>
+                                    <p class="text-xs text-gray-500">{{ car.input_date.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+                                </div>
+                                <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">在场</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fa fa-car text-4xl mb-3 opacity-50"></i>
+                                <p class="font-medium">当前无车辆在场</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载中弹窗 -->
+    <div id="loading-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <h3 class="text-xl font-semibold text-gray-800">处理中...</h3>
+            <p id="loading-text" class="text-gray-500 mt-2">请稍候</p>
+        </div>
+    </div>
+</body>
+
+<script>
+// 页面加载完成后执行
+document.addEventListener("DOMContentLoaded", function() {
+    // 获取CSRF令牌
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    // DOM元素
+    const captureBtn = document.getElementById("capture-btn");
+    const refreshVideoBtn = document.getElementById("refresh-video");
+    const recognizeBtn = document.getElementById("recognize-btn");
+    const refreshCarsBtn = document.getElementById("refresh-cars");
+    const videoElement = document.getElementById('video-preview');
+    const videoPlaceholder = document.getElementById('video-placeholder');
+    const videoLoading = document.getElementById('video-loading');
+    const capturePreviewContainer = document.getElementById("capture-preview-container");
+    const capturePreview = document.getElementById("capture-preview");
+    const noCaptureTip = document.getElementById("no-capture-tip");
+    const recognitionResult = document.getElementById("recognition-result");
+    const markedImage = document.getElementById("marked-image");
+    const carNumber = document.getElementById("car-number");
+    const accessType = document.getElementById("access-type");
+    const parkingFee = document.getElementById("parking-fee");
+    const feeContainer = document.getElementById("fee-container");
+    const accessTime = document.getElementById("access-time");
+    const remainingLotEl = document.getElementById("remaining-lot");
+    const currentTimeEl = document.getElementById("current-time");
+    const loadingModal = document.getElementById("loading-modal");
+    const loadingText = document.getElementById("loading-text");
+    const imageUpload = document.getElementById('image-upload');
+    const videoUpload = document.getElementById('video-upload');
+
+    // 实时更新当前时间
+    function updateCurrentTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hour = String(now.getHours()).padStart(2, "0");
+        const minute = String(now.getMinutes()).padStart(2, "0");
+        const second = String(now.getSeconds()).padStart(2, "0");
+        currentTimeEl.textContent = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+    }
+    setInterval(updateCurrentTime, 1000);
+
+    // 显示加载弹窗
+    function showLoading(text = "请稍候") {
+        loadingText.textContent = text;
+        loadingModal.classList.remove("hidden");
+    }
+
+    // 隐藏加载弹窗
+    function hideLoading() {
+        loadingModal.classList.add("hidden");
+    }
+
+    // 初始化视频流
+    function initVideoStream() {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    videoElement.srcObject = stream;
+                    videoElement.classList.remove('hidden');
+                    videoPlaceholder.classList.add('hidden');
+                    videoLoading.classList.add('hidden');
+                })
+                .catch(function(error) {
+                    console.error('摄像头访问失败:', error);
+                    videoLoading.innerHTML = '<i class="fa fa-exclamation-triangle text-2xl mb-3"></i><p class="text-lg">摄像头访问失败</p>';
+                });
+        } else {
+            videoLoading.innerHTML = '<i class="fa fa-exclamation-triangle text-2xl mb-3"></i><p class="text-lg">浏览器不支持摄像头访问</p>';
+        }
+    }
+
+    // 抓拍图像
+    captureBtn.addEventListener("click", function() {
+        if (!videoElement.srcObject) {
+            alert("请先确保摄像头已连接");
+            return;
+        }
+
+        showLoading("正在抓拍图像...");
+
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth || 800;
+        canvas.height = videoElement.videoHeight || 450;
+        canvas.getContext('2d').drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+        try {
+            const imageData = canvas.toDataURL('image/jpeg');
+            fetch("/capture", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken  // 添加CSRF令牌
+                },
+                body: JSON.stringify({ image_data: imageData })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                hideLoading();
+                if (data.status === "success") {
+                    // 显示抓拍预览
+                    capturePreview.src = data.image_path;
+                    capturePreviewContainer.classList.remove("hidden");
+                    noCaptureTip.classList.add("hidden");
+                    capturePreview.dataset.imagePath = data.image_path;
+                } else {
+                    alert(`抓拍失败：${data.message}`);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                alert(`抓拍出错：${error.message}`);
+            });
+        } catch (error) {
+            hideLoading();
+            alert(`图像处理出错：${error.message}`);
+        }
+    });
+
+    // 刷新视频
+    refreshVideoBtn.addEventListener("click", function() {
+        videoLoading.classList.remove('hidden');
+        if (videoElement.srcObject) {
+            videoElement.srcObject.getTracks().forEach(track => track.stop());
+        }
+        initVideoStream();
+    });
+
+    // 识别车牌
+    recognizeBtn.addEventListener("click", function() {
+        const imagePath = capturePreview.dataset.imagePath;
+        if (!imagePath) {
+            alert("请先抓拍图像");
+            return;
+        }
+
+        showLoading("正在识别车牌...");
+
+        const formData = new FormData();
+        formData.append("image_path", imagePath);
+
+        fetch("/recognize", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken  // 添加CSRF令牌
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP错误: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            hideLoading();
+            if (data.status === "success") {
+                // 显示识别结果
+                recognitionResult.classList.remove("hidden");
+                markedImage.src = data.marked_image;
+                carNumber.textContent = data.car_number;
+
+                accessType.textContent = data.type === "enter" ? "入场" : "出场";
+                accessTime.textContent = data.type === "enter" ? data.input_date : data.output_date;
+
+                // 显示费用（仅出场时）
+                if (data.type === "exit") {
+                    feeContainer.style.display = "block";
+                    parkingFee.textContent = `${data.fee.toFixed(2)} 元`;
+                } else {
+                    feeContainer.style.display = "none";
+                }
+
+                // 刷新剩余车位和车辆列表
+                refreshRemainingLot();
+                refreshCurrentCars();
+            } else {
+                alert(`识别失败：${data.message}`);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            alert(`识别出错：${error.message}`);
+        });
+    });
+
+    // 刷新剩余车位
+    function refreshRemainingLot() {
+        fetch("/remaining_lot")
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    remainingLotEl.textContent = data.remaining_lot;
+                }
+            })
+            .catch(error => console.error("刷新剩余车位失败:", error));
+    }
+
+    // 刷新当前车辆列表
+    function refreshCurrentCars() {
+        fetch("/current_cars")
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    const carsContainer = document.getElementById("current-cars");
+                    carsContainer.innerHTML = "";
+
+                    if (data.current_cars.length === 0) {
+                        carsContainer.innerHTML = `
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fa fa-car text-4xl mb-3 opacity-50"></i>
+                                <p class="font-medium">当前无车辆在场</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    data.current_cars.forEach(car => {
+                        const div = document.createElement("div");
+                        div.className = "car-item rounded-xl p-4 flex justify-between items-center";
+                        div.innerHTML = `
+                            <div>
+                                <p class="font-bold text-gray-800 text-lg">${car.license_plate}</p>
+                                <p class="text-xs text-gray-500">${car.input_date}</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-medium">在场</span>
+                        `;
+                        carsContainer.appendChild(div);
+                    });
+                }
+            })
+            .catch(error => console.error("刷新车辆列表失败:", error));
+    }
+
+    // 图片上传处理
+    imageUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showLoading("正在处理图片...");
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        fetch('/upload_image', {
+            method: 'POST',
+            headers: {
+                "X-CSRFToken": csrfToken  // 添加CSRF令牌
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            hideLoading();
+            if (data.status === "success") {
+                // 显示上传的图片预览
+                capturePreview.src = data.image_path;
+                capturePreviewContainer.classList.remove("hidden");
+                noCaptureTip.classList.add("hidden");
+                capturePreview.dataset.imagePath = data.image_path;
+            } else {
+                alert(`上传失败：${data.message}`);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            alert(`上传出错：${error.message}`);
+        });
+    });
+
+    // 视频上传处理
+    videoUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showLoading("正在处理视频...");
+
+        const formData = new FormData();
+        formData.append('video', file);
+
+        fetch('/upload_video', {
+            method: 'POST',
+            headers: {
+                "X-CSRFToken": csrfToken  // 添加CSRF令牌
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            hideLoading();
+            if (data.status === "success") {
+                // 显示视频帧预览
+                capturePreview.src = data.frame_path;
+                capturePreviewContainer.classList.remove("hidden");
+                noCaptureTip.classList.add("hidden");
+                capturePreview.dataset.imagePath = data.frame_path;
+            } else {
+                alert(`视频处理失败：${data.message}`);
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            alert(`视频处理出错：${error.message}`);
+        });
+    });
+
+    // 绑定刷新车辆列表按钮事件
+    refreshCarsBtn.addEventListener("click", refreshCurrentCars);
+
+    // 初始化：启动摄像头并设置定时刷新
+    initVideoStream();
+    setInterval(refreshRemainingLot, 30000);
+    setInterval(refreshCurrentCars, 30000);
+});
+</script>
+</html>

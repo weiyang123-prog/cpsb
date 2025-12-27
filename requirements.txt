@@ -1,0 +1,8 @@
+flask==2.3.3
+flask-login==0.6.3
+pymysql==1.1.1
+opencv-python==4.9.0.80
+pillow==10.2.0
+baidu-aip==4.16.16
+numpy==1.26.4
+python-dotenv==1.0.0
