@@ -705,5 +705,6 @@ def upload_video():
     return jsonify({"status": "error", "message": "不支持的视频格式"})
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    # 绑定0.0.0.0，端口指定为8080（Zeabur兼容）
+    app.run(host='0.0.0.0', port=8080, debug=False)  # 生产环境关闭debug
