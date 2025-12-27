@@ -6,3 +6,4 @@ pillow==10.2.0
 baidu-aip==4.16.16
 numpy==1.26.4
 python-dotenv==1.0.0
+python main.py
